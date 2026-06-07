@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Network Monitor</title>
+  <meta http-equiv="refresh" content="30">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:rgba(255,255,255,0.07);
+      --text:#f1f5f9;--muted:#64748b;
+      --online:#00e5a0;--offline:#f43f5e;--unknown:#f59e0b;--accent:#3b82f6;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+      background-image:radial-gradient(ellipse at 10% 0%,rgba(0,229,160,0.05) 0%,transparent 60%),
+      radial-gradient(ellipse at 90% 100%,rgba(59,130,246,0.05) 0%,transparent 60%);}
+    .layout{display:flex;min-height:100vh}
+    .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:2rem 1.25rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+    .logo{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--online);margin-bottom:2.5rem;display:flex;align-items:center;gap:0.5rem}
+    .logo span{color:var(--text)}
+    .nav-item{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.8rem;border-radius:8px;color:var(--muted);text-decoration:none;font-size:0.88rem;font-weight:500;margin-bottom:0.2rem;transition:all 0.2s}
+    .nav-item:hover,.nav-item.active{background:rgba(0,229,160,0.08);color:var(--online)}
+    .sidebar-bottom{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border);font-size:0.75rem;color:var(--muted);text-align:center}
+    .pulse{width:8px;height:8px;border-radius:50%;background:var(--online);box-shadow:0 0 6px var(--online);animation:pulse 2s infinite;display:inline-block;margin-right:6px}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .main{flex:1;padding:2rem}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem}
+    .page-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800}
+    .page-title span{color:var(--online)}
+    .topbar-right{display:flex;gap:0.75rem;align-items:center}
+    .btn{padding:0.55rem 1.1rem;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;text-decoration:none;border:none;font-family:'Syne',sans-serif;transition:opacity 0.2s}
+    .btn-primary{background:var(--online);color:#0a0f1e}
+    .btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+    .btn:hover{opacity:0.85}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;overflow:hidden}
+    .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .stat.total::before{background:var(--accent)}
+    .stat.online::before{background:var(--online)}
+    .stat.offline::before{background:var(--offline)}
+    .stat.unknown::before{background:var(--unknown)}
+    .stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.5rem}
+    .stat-value{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800}
+    .stat.total .stat-value{color:var(--accent)}
+    .stat.online .stat-value{color:var(--online)}
+    .stat.offline .stat-value{color:var(--offline)}
+    .stat.unknown .stat-value{color:var(--unknown)}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem}
+    .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+    .card-title{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700}
+    .device-grid{display:flex;flex-direction:column;gap:0.6rem}
+    .device-row{display:flex;align-items:center;gap:1rem;padding:0.9rem 1rem;background:var(--surface2);border-radius:10px;transition:background 0.2s}
+    .device-row:hover{background:rgba(255,255,255,0.04)}
+    .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .status-dot.online{background:var(--online);box-shadow:0 0 8px var(--online)}
+    .status-dot.offline{background:var(--offline);box-shadow:0 0 8px var(--offline)}
+    .status-dot.unknown{background:var(--unknown);box-shadow:0 0 8px var(--unknown)}
+    .device-info{flex:1}
+    .device-name{font-size:0.9rem;font-weight:500}
+    .device-ip{font-size:0.75rem;color:var(--muted);margin-top:2px}
+    .device-status{font-size:0.78rem;font-weight:600;padding:0.2rem 0.6rem;border-radius:6px;text-transform:uppercase}
+    .device-status.online{background:rgba(0,229,160,0.12);color:var(--online)}
+    .device-status.offline{background:rgba(244,63,94,0.12);color:var(--offline)}
+    .device-status.unknown{background:rgba(245,158,11,0.12);color:var(--unknown)}
+    .device-rt{font-size:0.8rem;color:var(--muted);min-width:80px;text-align:right}
+    .device-actions{display:flex;gap:0.4rem}
+    .action-btn{padding:0.3rem 0.7rem;border-radius:6px;font-size:0.75rem;text-decoration:none;font-weight:500;transition:opacity 0.2s;border:none;cursor:pointer}
+    .action-btn:hover{opacity:0.8}
+    .btn-check{background:rgba(59,130,246,0.12);color:var(--accent)}
+    .btn-view{background:rgba(0,229,160,0.1);color:var(--online)}
+    .btn-del{background:rgba(244,63,94,0.1);color:var(--offline)}
+    .empty{text-align:center;padding:3rem;color:var(--muted);font-size:0.9rem}
+    .messages{margin-bottom:1rem}
+    .message{padding:0.75rem 1rem;border-radius:8px;font-size:0.85rem;margin-bottom:0.5rem;background:rgba(0,229,160,0.1);color:var(--online);border:1px solid rgba(0,229,160,0.2)}
+    .auto-badge{font-size:0.7rem;color:var(--muted);padding:0.2rem 0.5rem;border:1px solid var(--border);border-radius:6px}
+    .last-checked{font-size:0.72rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">◈ <span>NetMonitor</span></div>
+    <a href="/" class="nav-item active">⊞ Dashboard</a>
+    <a href="/add/" class="nav-item">＋ Add Device</a>
+    <div class="sidebar-bottom">
+      <span class="pulse"></span>Auto-refresh 30s
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 class="page-title">Network <span>Status</span></h1>
+      <div class="topbar-right">
+        <span class="auto-badge">🔄 Auto-refresh on</span>
+        <a href="/check-all/" class="btn btn-secondary">Check All</a>
+        <a href="/add/" class="btn btn-primary">+ Add Device</a>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="message">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="stats-grid">
+      <div class="stat total">
+        <div class="stat-label">Total Devices</div>
+        <div class="stat-value">{{ total }}</div>
+      </div>
+      <div class="stat online">
+        <div class="stat-label">Online</div>
+        <div class="stat-value">{{ online }}</div>
+      </div>
+      <div class="stat offline">
+        <div class="stat-label">Offline</div>
+        <div class="stat-value">{{ offline }}</div>
+      </div>
+      <div class="stat unknown">
+        <div class="stat-label">Unknown</div>
+        <div class="stat-value">{{ unknown }}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Monitored Devices</div>
+        <span style="font-size:0.78rem;color:var(--muted)">{{ total }} device{{ total|pluralize }}</span>
+      </div>
+      <div class="device-grid">
+        {% for device in devices %}
+        <div class="device-row">
+          <div class="status-dot {{ device.status }}"></div>
+          <div class="device-info">
+            <div class="device-name">{{ device.name }}</div>
+            <div class="device-ip">{{ device.ip_address }}
+              {% if device.last_checked %}
+              · <span class="last-checked">Last checked {{ device.last_checked|timesince }} ago</span>
+              {% endif %}
+            </div>
+          </div>
+          <span class="device-status {{ device.status }}">{{ device.status }}</span>
+          <div class="device-rt">
+            {% if device.response_time %}{{ device.response_time }}ms{% else %}—{% endif %}
+          </div>
+          <div class="device-actions">
+            <a href="/check/{{ device.pk }}/" class="action-btn btn-check">Ping</a>
+            <a href="/device/{{ device.pk }}/" class="action-btn btn-view">Logs</a>
+            <a href="/delete/{{ device.pk }}/" class="action-btn btn-del">✕</a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty">No devices yet.<br>Add your first device to start monitoring.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

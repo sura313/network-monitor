@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ device.name }} — NetMonitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:rgba(255,255,255,0.07);--text:#f1f5f9;--muted:#64748b;--online:#00e5a0;--offline:#f43f5e;--unknown:#f59e0b;--accent:#3b82f6}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem;
+      background-image:radial-gradient(ellipse at 10% 0%,rgba(0,229,160,0.05) 0%,transparent 60%)}
+    .back{display:inline-flex;align-items:center;gap:0.5rem;color:var(--muted);text-decoration:none;font-size:0.85rem;margin-bottom:1.5rem;transition:color 0.2s}
+    .back:hover{color:var(--online)}
+    .header-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem}
+    .status-circle{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+    .status-circle.online{background:var(--online);box-shadow:0 0 10px var(--online)}
+    .status-circle.offline{background:var(--offline);box-shadow:0 0 10px var(--offline)}
+    .status-circle.unknown{background:var(--unknown);box-shadow:0 0 10px var(--unknown)}
+    .device-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800}
+    .device-meta{font-size:0.82rem;color:var(--muted);margin-top:4px}
+    .stats-row{display:flex;gap:1rem;margin-left:auto}
+    .mini-stat{text-align:center}
+    .mini-stat-val{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--online)}
+    .mini-stat-label{font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem}
+    .card-title{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;margin-bottom:1rem}
+    .log-row{display:flex;align-items:center;gap:1rem;padding:0.65rem 0.75rem;border-radius:8px;font-size:0.83rem;border-bottom:1px solid var(--border)}
+    .log-row:last-child{border-bottom:none}
+    .log-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .log-dot.online{background:var(--online)}
+    .log-dot.offline{background:var(--offline)}
+    .log-dot.unknown{background:var(--unknown)}
+    .log-status{font-weight:600;min-width:60px}
+    .log-status.online{color:var(--online)}
+    .log-status.offline{color:var(--offline)}
+    .log-rt{color:var(--muted);min-width:80px}
+    .log-time{color:var(--muted);margin-left:auto;font-size:0.78rem}
+    .empty{text-align:center;padding:2rem;color:var(--muted);font-size:0.85rem}
+    .btn{padding:0.5rem 1rem;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;border:none;font-family:'Syne',sans-serif;transition:opacity 0.2s}
+    .btn-primary{background:var(--online);color:#0a0f1e}
+    .btn:hover{opacity:0.85}
+  </style>
+</head>
+<body>
+  <a href="/" class="back">← Back to Dashboard</a>
+
+  <div class="header-card">
+    <div class="status-circle {{ device.status }}"></div>
+    <div>
+      <div class="device-title">{{ device.name }}</div>
+      <div class="device-meta">{{ device.ip_address }} · {{ device.description|default:"No description" }}</div>
+    </div>
+    <div class="stats-row">
+      <div class="mini-stat">
+        <div class="mini-stat-val">{{ device.response_time|default:"—" }}{% if device.response_time %}ms{% endif %}</div>
+        <div class="mini-stat-label">Response</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val">{{ logs|length }}</div>
+        <div class="mini-stat-label">Log entries</div>
+      </div>
+    </div>
+    <a href="/check/{{ device.pk }}/" class="btn btn-primary">Ping Now</a>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ping History (last 50)</div>
+    {% for log in logs %}
+    <div class="log-row">
+      <div class="log-dot {{ log.status }}"></div>
+      <span class="log-status {{ log.status }}">{{ log.status|upper }}</span>
+      <span class="log-rt">{% if log.response_time %}{{ log.response_time }}ms{% else %}—{% endif %}</span>
+      <span class="log-time">{{ log.timestamp|timesince }} ago</span>
+    </div>
+    {% empty %}
+    <div class="empty">No logs yet. Click "Ping Now" to start.</div>
+    {% endfor %}
+  </div>
+</body>
+</html>

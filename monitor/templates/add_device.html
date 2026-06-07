@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Device — NetMonitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:rgba(255,255,255,0.07);--text:#f1f5f9;--muted:#64748b;--online:#00e5a0;--accent:#3b82f6}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;
+      background-image:radial-gradient(ellipse at 10% 0%,rgba(0,229,160,0.06) 0%,transparent 60%)}
+    .wrapper{width:100%;max-width:500px}
+    .back{display:inline-flex;align-items:center;gap:0.5rem;color:var(--muted);text-decoration:none;font-size:0.85rem;margin-bottom:1.5rem;transition:color 0.2s}
+    .back:hover{color:var(--online)}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:2rem}
+    .title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:0.2rem}
+    .title span{color:var(--online)}
+    .subtitle{color:var(--muted);font-size:0.85rem;margin-bottom:1.75rem}
+    .field{margin-bottom:1.2rem}
+    label{display:block;font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.45rem}
+    input,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:0.7rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s}
+    input:focus,textarea:focus{border-color:var(--online)}
+    textarea{resize:vertical;min-height:80px}
+    .hint{font-size:0.75rem;color:var(--muted);margin-top:0.3rem}
+    .submit{width:100%;padding:0.85rem;background:var(--online);color:#0a0f1e;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:800;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s}
+    .submit:hover{opacity:0.88}
+    .errorlist{list-style:none;color:#f43f5e;font-size:0.78rem;margin-top:0.3rem}
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <a href="/" class="back">← Back to Dashboard</a>
+  <div class="card">
+    <div class="title">Add <span>Device</span></div>
+    <div class="subtitle">Start monitoring a new server or network device</div>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="field">
+        <label>Device Name</label>
+        {{ form.name }}
+        {{ form.name.errors }}
+        <div class="hint">e.g. Main Server, Router, Google DNS</div>
+      </div>
+      <div class="field">
+        <label>IP Address</label>
+        {{ form.ip_address }}
+        {{ form.ip_address.errors }}
+        <div class="hint">e.g. 8.8.8.8 or 192.168.1.1</div>
+      </div>
+      <div class="field">
+        <label>Description (optional)</label>
+        {{ form.description }}
+      </div>
+      <div class="field">
+        <label>Alert Email (optional)</label>
+        {{ form.alert_email }}
+        {{ form.alert_email.errors }}
+        <div class="hint">Get notified when this device goes offline</div>
+      </div>
+      <button type="submit" class="submit">Start Monitoring</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
